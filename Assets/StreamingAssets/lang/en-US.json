@@ -303,7 +303,8 @@
             "Popup": {
                 "Header": {
                     "SortBy": "Sort By...",
-                    "GoTo": "Go To..."
+                    "GoTo": "Go To...",
+					"RateSong": "Rate Song"
                 },
                 "Item": {
                     "RandomSong": "Random Song",
@@ -317,7 +318,8 @@
                     "CreateNewPlaylist": "Create New...",
                     "RemovePlaylist": "Remove Playlist",
                     "ViewSongFolder": "View Song Folder",
-                    "CopySongChecksum": "Copy Song Checksum"
+                    "CopySongChecksum": "Copy Song Checksum",
+					"RateSong": "Rate Song"
                 }
             },
             "Back": "BACK",

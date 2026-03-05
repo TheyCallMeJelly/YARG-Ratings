@@ -13,6 +13,7 @@ using YARG.Menu.Navigation;
 using YARG.Menu.Persistent;
 using YARG.Player;
 using YARG.Playlists;
+using YARG.Ratings;
 using YARG.Settings;
 using YARG.Song;
 
@@ -26,6 +27,9 @@ namespace YARG.Menu.MusicLibrary
             SortSelect,
             GoToSection,
             AddToPlaylist,
+            RateSong,
+            RateFun,
+            RateDifficulty,
         }
 
         [SerializeField]
@@ -95,6 +99,35 @@ namespace YARG.Menu.MusicLibrary
                     break;
                 case State.AddToPlaylist:
                     CreateAddToPlayList();
+                    break;
+                case State.RateSong:
+                    CreateRateSong();
+                    break;
+                case State.RateFun:
+                    CreateRatingPicker("Fun Rating", (value) =>
+                    {
+                        var song = (_musicLibrary.CurrentSelection as SongViewType)?.SongEntry;
+                        if (song == null) return;
+                        var existing = RatingsContainer.GetRating(song.Hash);
+                        int diff = existing?.Difficulty ?? 0;
+                        RatingsContainer.SetRating(song.Hash, value, diff);
+                        _musicLibrary.RefreshSidebar();
+                        _menuState = State.RateSong;
+                        UpdateForState();
+                    });
+                    break;
+                case State.RateDifficulty:
+                    CreateRatingPicker("My Difficulty", (value) =>
+                    {
+                        var song = (_musicLibrary.CurrentSelection as SongViewType)?.SongEntry;
+                        if (song == null) return;
+                        var existing = RatingsContainer.GetRating(song.Hash);
+                        int fun = existing?.Fun ?? 0;
+                        RatingsContainer.SetRating(song.Hash, fun, value);
+                        _musicLibrary.RefreshSidebar();
+                        _menuState = State.RateSong;
+                        UpdateForState();
+                    });
                     break;
             }
 
@@ -216,6 +249,15 @@ namespace YARG.Menu.MusicLibrary
                 });
             }
 
+            if (viewType is SongViewType)
+            {
+                CreateItem("RateSong", () =>
+                {
+                    _menuState = State.RateSong;
+                    UpdateForState();
+                });
+            }
+
             // Only show these options if we are selecting a song
             if (viewType is SongViewType songViewType &&
                 SettingsManager.Settings.ShowAdvancedMusicLibraryOptions.Value)
@@ -243,6 +285,43 @@ namespace YARG.Menu.MusicLibrary
                     GUIUtility.systemCopyBuffer = song.Hash.ToString();
 
                     gameObject.SetActive(false);
+                });
+            }
+        }
+
+        private void CreateRateSong()
+        {
+            SetLocalizedHeader("RateSong");
+
+            var song = (_musicLibrary.CurrentSelection as SongViewType)?.SongEntry;
+            if (song == null) return;
+
+            var existing = RatingsContainer.GetRating(song.Hash);
+            int currentFun = existing?.Fun ?? 0;
+            int currentDiff = existing?.Difficulty ?? 0;
+
+            CreateItemUnlocalized($"Fun Rating (current: {(currentFun > 0 ? currentFun + "/10" : "-/10")})", () =>
+            {
+                _menuState = State.RateFun;
+                UpdateForState();
+            });
+
+            CreateItemUnlocalized($"My Difficulty (current: {(currentDiff > 0 ? currentDiff + "/10" : "-/10")})", () =>
+            {
+                _menuState = State.RateDifficulty;
+                UpdateForState();
+            });
+        }
+
+        private void CreateRatingPicker(string header, System.Action<int> onSelected)
+        {
+            SetHeader(header);
+            for (int i = 10; i >= 1; i--)
+            {
+                int value = i;
+                CreateItemUnlocalized($"{value}/10", () =>
+                {
+                    onSelected(value);
                 });
             }
         }

@@ -108,6 +108,16 @@ namespace YARG.Menu.MusicLibrary
             }
         }
 
+        public void RefreshRatingDisplay()
+        {
+            var viewType = _musicLibraryMenu.CurrentSelection;
+            if (viewType is not SongViewType songViewType) return;
+
+            var rating = RatingsContainer.GetRating(songViewType.SongEntry.Hash);
+            _funRating.text = rating != null ? $"{rating.Fun}/10" : "-/10";
+            _difficultyRating.text = rating != null ? $"{rating.Difficulty}/10" : "-/10";
+        }
+
         private void ShowCategoryInfo(CategoryViewType categoryViewType)
         {
             _source.text = categoryViewType.SourceCountText;

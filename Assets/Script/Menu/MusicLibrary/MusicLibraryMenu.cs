@@ -823,5 +823,9 @@ namespace YARG.Menu.MusicLibrary
         {
             _mainLibraryIndex = -1;
         }
+        public void RefreshSidebar()
+        {
+            _sidebar.RefreshRatingDisplay();
+        }
     }
 }
