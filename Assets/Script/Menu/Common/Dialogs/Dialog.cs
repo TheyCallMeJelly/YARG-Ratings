@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -14,7 +14,7 @@ namespace YARG.Menu.Dialogs
         [SerializeField]
         private Transform _dialogButtonContainer;
         [SerializeField]
-        private NavigationGroup _navigationGroup;
+        protected NavigationGroup _navigationGroup;
         [SerializeField]
         private ColoredButton _dialogButtonPrefab;
 

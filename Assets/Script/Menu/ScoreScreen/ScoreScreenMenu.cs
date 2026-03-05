@@ -402,8 +402,6 @@ namespace YARG.Menu.ScoreScreen
         private NavigationScheme.Entry _scrollDownEntry;
         private NavigationScheme.Entry _rateSongButtonEntry;
 
-
-
         private void UpdateRatingDisplay()
         {
             var song = GlobalVariables.State.CurrentSong;
@@ -412,25 +410,71 @@ namespace YARG.Menu.ScoreScreen
                 _funRatingText.text = rating != null ? $"FUN  {rating.Fun}/10" : "FUN  -/10";
             if (_difficultyRatingText != null)
                 _difficultyRatingText.text = rating != null ? $"DIFFICULTY  {rating.Difficulty}/10" : "DIFFICULTY  -/10";
+
+            foreach (var card in _scoreCards)
+                card.RefreshRatingDisplay();
         }
 
-        private System.Collections.IEnumerator ShowDifficultyDialogNextFrame(int funValue)
+        private void ShowRateSongMenu()
         {
-            yield return null;
             var song = GlobalVariables.State.CurrentSong;
             var existing = RatingsContainer.GetRating(song.Hash);
-            int currentDifficulty = existing?.Difficulty ?? 5;
-            DialogManager.Instance.ShowRenameDialog(
-                $"Rate Difficulty (current: {currentDifficulty}/10)\nEnter a number 1-10:",
-                (input2) =>
+            int currentFun = existing?.Fun ?? 0;
+            int currentDiff = existing?.Difficulty ?? 0;
+
+            var dialog = DialogManager.Instance.ShowList("Rate This Song");
+            dialog.AddListButton($"Fun Rating (current: {(currentFun > 0 ? currentFun + "/10" : "-/10")})", () =>
+            {
+                StartCoroutine(ShowRatingPickerNextFrame("Fun Rating", (value) =>
                 {
-                    if (int.TryParse(input2, out int diffValue) && diffValue >= 1 && diffValue <= 10)
-                    {
-                        RatingsContainer.SetRating(song.Hash, funValue, diffValue);
-                        UpdateRatingDisplay();
-                    }
-                }
-            );
+                    var existingAfter = RatingsContainer.GetRating(song.Hash);
+                    int diff = existingAfter?.Difficulty ?? 0;
+                    RatingsContainer.SetRating(song.Hash, value, diff);
+                    UpdateRatingDisplay();
+                }, ShowRateSongMenu));
+            });
+
+            dialog.AddListButton($"Difficulty Rating (current: {(currentDiff > 0 ? currentDiff + "/10" : "-/10")})", () =>
+            {
+                StartCoroutine(ShowRatingPickerNextFrame("Difficulty Rating", (value) =>
+                {
+                    var existingAfter = RatingsContainer.GetRating(song.Hash);
+                    int fun = existingAfter?.Fun ?? 0;
+                    RatingsContainer.SetRating(song.Hash, fun, value);
+                    UpdateRatingDisplay();
+                }, ShowRateSongMenu));
+            });
+        }
+
+        private System.Collections.IEnumerator ShowRatingPickerNextFrame(string title, System.Action<int> onSelected, System.Action onComplete)
+        {
+            yield return 0;
+            var dialog = DialogManager.Instance.ShowList(title);
+            for (int i = 10; i >= 1; i--)
+            {
+                int value = i;
+                dialog.AddListButton($"{value}/10", () =>
+                {
+                    onSelected(value);
+                    StartCoroutine(ReopenRateMenuNextFrame(onComplete));
+                });
+            }
+        }
+
+        private System.Collections.IEnumerator ReopenRateMenuNextFrame(System.Action onComplete)
+        {
+            yield return 0;
+            onComplete?.Invoke();
+            UpdateRatingDisplay();
+        }
+
+        private System.Collections.IEnumerator UpdateDisplayAfterDialogClosed()
+        {
+            // Wait for dialog to appear first
+            yield return new WaitUntil(() => DialogManager.Instance.IsDialogShowing);
+            // Then wait for it to fully close
+            yield return new WaitUntil(() => !DialogManager.Instance.IsDialogShowing);
+            UpdateRatingDisplay();
         }
 
         private void SetNavigationScheme()
@@ -486,21 +530,8 @@ namespace YARG.Menu.ScoreScreen
 
             _rateSongButtonEntry = new NavigationScheme.Entry(MenuAction.Orange, "Menu.ScoreScreen.RateSong", () =>
             {
-                var song = GlobalVariables.State.CurrentSong;
-                var existing = RatingsContainer.GetRating(song.Hash);
-                int currentFun = existing?.Fun ?? 5;
-                int currentDifficulty = existing?.Difficulty ?? 5;
-
-                DialogManager.Instance.ShowRenameDialog(
-                    $"Rate Fun (current: {currentFun}/10)\nEnter a number 1-10:",
-                    (input) =>
-                    {
-                        if (int.TryParse(input, out int funValue) && funValue >= 1 && funValue <= 10)
-                        {
-                            StartCoroutine(ShowDifficultyDialogNextFrame(funValue));
-                        }
-                    }
-                );
+                ShowRateSongMenu();
+                StartCoroutine(UpdateDisplayAfterDialogClosed());
             });
 
             _scrollLeftEntry = new NavigationScheme.Entry(MenuAction.Left, "Menu.Common.Scroll", context =>

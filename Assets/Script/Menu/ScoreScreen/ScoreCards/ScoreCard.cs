@@ -171,6 +171,14 @@ namespace YARG.Menu.ScoreScreen
                 icon.InitializeForModifier(modifier);
             }
         }
+        public void RefreshRatingDisplay()
+        {
+            var rating = RatingsContainer.GetRating(GlobalVariables.State.CurrentSong.Hash);
+            if (_funRating != null)
+                _funRating.text = rating != null ? $"{rating.Fun}/10" : "-/10";
+            if (_difficultyRating != null)
+                _difficultyRating.text = rating != null ? $"{rating.Difficulty}/10" : "-/10";
+        }
 
         private void ShowTag(string tagText)
         {
@@ -201,5 +209,6 @@ namespace YARG.Menu.ScoreScreen
         YargPlayer Player { get; }
         void ScrollStats(float delta);
         void SetCardContents();
+        void RefreshRatingDisplay();
     }
 }
