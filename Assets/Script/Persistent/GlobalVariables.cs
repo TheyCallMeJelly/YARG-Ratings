@@ -4,8 +4,8 @@ using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using YARG.Audio.BASS;
-using YARG.Core.Logging;
 using YARG.Core.Audio;
+using YARG.Core.Logging;
 using YARG.Helpers;
 using YARG.Input;
 using YARG.Integration;
@@ -13,6 +13,7 @@ using YARG.Localization;
 using YARG.Menu.Navigation;
 using YARG.Player;
 using YARG.Playlists;
+using YARG.Ratings;
 using YARG.Replays;
 using YARG.Scores;
 using YARG.Settings;
@@ -76,6 +77,7 @@ namespace YARG
             ReplayContainer.Init();
             ScoreContainer.Init();
             PlaylistContainer.Initialize();
+            RatingsContainer.Initialize();
             CustomContentManager.Initialize();
             LocalizationManager.Initialize(CommandLineArgs.Language);
 

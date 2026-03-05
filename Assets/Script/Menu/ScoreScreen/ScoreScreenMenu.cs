@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
@@ -27,6 +27,7 @@ using YARG.Helpers.Extensions;
 using YARG.Core.Engine;
 using YARG.Playback;
 using YARG.Settings;
+using YARG.Ratings;
 
 namespace YARG.Menu.ScoreScreen
 {
@@ -64,6 +65,12 @@ namespace YARG.Menu.ScoreScreen
         private ProKeysScoreCard _proKeysCardPrefab;
         [SerializeField]
         private ProKeysScoreCard _fiveLaneKeysCardPrefab;
+
+        [Space]
+        [SerializeField]
+        private TextMeshProUGUI _funRatingText;
+        [SerializeField]
+        private TextMeshProUGUI _difficultyRatingText;
 
         private bool _analyzingReplay;
 
@@ -140,6 +147,7 @@ namespace YARG.Menu.ScoreScreen
 
             //set restarting state
             _restartingSong = false;
+            UpdateRatingDisplay();
         }
 
         private void OnDisable()
@@ -392,6 +400,38 @@ namespace YARG.Menu.ScoreScreen
         private NavigationScheme.Entry _scrollRightEntry;
         private NavigationScheme.Entry _scrollUpEntry;
         private NavigationScheme.Entry _scrollDownEntry;
+        private NavigationScheme.Entry _rateSongButtonEntry;
+
+
+
+        private void UpdateRatingDisplay()
+        {
+            var song = GlobalVariables.State.CurrentSong;
+            var rating = RatingsContainer.GetRating(song.Hash);
+            if (_funRatingText != null)
+                _funRatingText.text = rating != null ? $"FUN  {rating.Fun}/10" : "FUN  -/10";
+            if (_difficultyRatingText != null)
+                _difficultyRatingText.text = rating != null ? $"DIFFICULTY  {rating.Difficulty}/10" : "DIFFICULTY  -/10";
+        }
+
+        private System.Collections.IEnumerator ShowDifficultyDialogNextFrame(int funValue)
+        {
+            yield return null;
+            var song = GlobalVariables.State.CurrentSong;
+            var existing = RatingsContainer.GetRating(song.Hash);
+            int currentDifficulty = existing?.Difficulty ?? 5;
+            DialogManager.Instance.ShowRenameDialog(
+                $"Rate Difficulty (current: {currentDifficulty}/10)\nEnter a number 1-10:",
+                (input2) =>
+                {
+                    if (int.TryParse(input2, out int diffValue) && diffValue >= 1 && diffValue <= 10)
+                    {
+                        RatingsContainer.SetRating(song.Hash, funValue, diffValue);
+                        UpdateRatingDisplay();
+                    }
+                }
+            );
+        }
 
         private void SetNavigationScheme()
         {
@@ -443,6 +483,25 @@ namespace YARG.Menu.ScoreScreen
                     PlaylistContainer.FavoritesPlaylist.RemoveSong(song);
                     UpdateNavigationScheme(true);
                 });
+
+            _rateSongButtonEntry = new NavigationScheme.Entry(MenuAction.Orange, "Menu.ScoreScreen.RateSong", () =>
+            {
+                var song = GlobalVariables.State.CurrentSong;
+                var existing = RatingsContainer.GetRating(song.Hash);
+                int currentFun = existing?.Fun ?? 5;
+                int currentDifficulty = existing?.Difficulty ?? 5;
+
+                DialogManager.Instance.ShowRenameDialog(
+                    $"Rate Fun (current: {currentFun}/10)\nEnter a number 1-10:",
+                    (input) =>
+                    {
+                        if (int.TryParse(input, out int funValue) && funValue >= 1 && funValue <= 10)
+                        {
+                            StartCoroutine(ShowDifficultyDialogNextFrame(funValue));
+                        }
+                    }
+                );
+            });
 
             _scrollLeftEntry = new NavigationScheme.Entry(MenuAction.Left, "Menu.Common.Scroll", context =>
                 {
@@ -497,6 +556,8 @@ namespace YARG.Menu.ScoreScreen
             {
                 buttons.Add(_addFavoriteButtonEntry);
             }
+
+            buttons.Add(_rateSongButtonEntry);
 
             if (GlobalVariables.State.PlayingAShow &&
                 GlobalVariables.State.ShowIndex + 1 < GlobalVariables.State.ShowSongs.Count)

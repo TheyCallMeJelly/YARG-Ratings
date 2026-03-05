@@ -12,6 +12,7 @@ using YARG.Core.Utility;
 using YARG.Helpers.Extensions;
 using YARG.Menu.Persistent;
 using YARG.Song;
+using YARG.Ratings;
 
 namespace YARG.Menu.MusicLibrary
 {
@@ -34,6 +35,10 @@ namespace YARG.Menu.MusicLibrary
         private TextMeshProUGUI _year;
         [SerializeField]
         private TextMeshProUGUI _length;
+        [SerializeField]
+        private TextMeshProUGUI _funRating;
+        [SerializeField]
+        private TextMeshProUGUI _difficultyRating;
         [SerializeField]
         private RawImage _albumCover;
 
@@ -120,6 +125,9 @@ namespace YARG.Menu.MusicLibrary
             _year.text = string.Empty;
             _length.text = string.Empty;
 
+            _funRating.text = string.Empty;
+            _difficultyRating.text = string.Empty;
+
             _source.text = string.Empty;
             _charter.text = string.Empty;
             _genre.text = string.Empty;
@@ -153,6 +161,10 @@ namespace YARG.Menu.MusicLibrary
             }
 
             UpdateDifficulties(songEntry);
+
+            var rating = RatingsContainer.GetRating(songEntry.Hash);
+            _funRating.text = rating != null ? $"{rating.Fun}/10" : "-/10";
+            _difficultyRating.text = rating != null ? $"{rating.Difficulty}/10" : "-/10";
 
             _cancellationToken = new();
             _albumCover.LoadAlbumCover(songEntry, _cancellationToken.Token);

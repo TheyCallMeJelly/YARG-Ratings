@@ -9,6 +9,7 @@ using YARG.Core.Extensions;
 using YARG.Core.Game;
 using YARG.Localization;
 using YARG.Player;
+using YARG.Ratings;
 
 namespace YARG.Menu.ScoreScreen
 {
@@ -64,6 +65,10 @@ namespace YARG.Menu.ScoreScreen
         private TextMeshProUGUI _bandBonusScore;
         [SerializeField]
         private TextMeshProUGUI _averageOffset;
+        [SerializeField]
+        private TextMeshProUGUI _funRating;
+        [SerializeField]
+        private TextMeshProUGUI _difficultyRating;
 
         private ScoreCardColorizer _colorizer;
 
@@ -139,6 +144,12 @@ namespace YARG.Menu.ScoreScreen
             _starpowerPhrases.text = $"{WrapWithColor(Stats.StarPowerPhrasesHit)} / {Stats.TotalStarPowerPhrases}";
             _bandBonusScore.text = WrapWithColor(Stats.BandBonusScore.ToString("N0"));
             _averageOffset.text = WrapWithColor(Mathf.RoundToInt((float)(Stats.GetAverageOffset() * 1000.0)).ToString() + " ms");
+
+            var rating = RatingsContainer.GetRating(GlobalVariables.State.CurrentSong.Hash);
+            if (_funRating != null)
+                _funRating.text = rating != null ? $"{rating.Fun}/10" : "-/10";
+            if (_difficultyRating != null)
+                _difficultyRating.text = rating != null ? $"{rating.Difficulty}/10" : "-/10";
 
             // Set background icon
             _instrumentIcon.sprite = Addressables
